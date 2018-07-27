@@ -737,7 +737,7 @@ class InputFormatValidators(ProblemAspect):
         if len(self._validators) == 0:
             self.error('No input format validators found')
 
-        for val in self._validators:
+        for val in self._validators[:]:
             try:
                 if not val.compile():
                     self.error('Compile error for %s' % val)
@@ -964,10 +964,13 @@ class OutputValidators(ProblemAspect):
         if self._problem.config.get('validation') == 'default' and self._default_validator is None:
             self.error('Unable to locate default validator')
 
-        for val in self._validators:
-            if not val.compile():
-                self.error('Compile error for output validator %s' % val)
-
+        for val in self._validators[:]:
+            try:
+                if not val.compile():
+                    self.error('Compile error for output validator %s' % val)
+                    self._validators.remove(val)
+            except run.ProgramError as e:
+                self.error(e)
 
         # Only sanity check output validators if they all actually compiled
         if self._check_res:
