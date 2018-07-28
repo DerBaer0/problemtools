@@ -37,7 +37,8 @@
 \RequirePackage{amsmath}          % AMS
 \RequirePackage{amssymb}          % AMS
 \RequirePackage[OT2,T1]{fontenc}  % Cyrillic and standard % TODO: make alphabet options more general
-\RequirePackage[utf8]{inputenc}   % UTF-8 support
+%\RequirePackage[utf8]{inputenc}   % UTF-8 support
+\RequirePackage{luacode}
 \RequirePackage{fancyhdr}         % Headers
 \RequirePackage{graphicx}         % Graphics
 \RequirePackage{subfigure}        % Subfigures
@@ -152,12 +153,26 @@
 \fi
 \fi
 
+\begin{luacode}
+function read(file)
+  local handler = io.open(file, "rb")
+  local content = handler:read("*all")
+  handler:close()
+  return content
+end
+function getConstraints(probid)
+	require("lualibs.lua")
+	constraints = utilities.json.tolua(read(probid .. "/problem_statement/constraints.json"))
+end
+\end{luacode}
+\newcommand{\constraint}[1]{\directlua{tex.print(constraints['#1'])}}
 
 %% Command for starting new problem
 
 %% Problem inclusion
 \newcommand{\includeproblem}[1]{
   \startproblem{#1}
+  \directlua{getConstraints("\@problemid")}
   \import{#1/problem_statement/}{problem\@problemlanguage.tex}
 
   %% Automatically include samples 1..9, if enabled
@@ -244,8 +259,8 @@
 
 \newcommand{\sampletable}[4]{
   % First find widths of the two files
-  \savebox{\PS@sampleinbox}{\lstinputlisting[inputencoding=utf8/latin1,basicstyle=\ttfamily]{#2}}
-  \savebox{\PS@sampleoutbox}{\lstinputlisting[inputencoding=utf8/latin1,basicstyle=\ttfamily]{#4}}
+  \savebox{\PS@sampleinbox}{\lstinputlisting[basicstyle=\ttfamily]{#2}}
+  \savebox{\PS@sampleoutbox}{\lstinputlisting[basicstyle=\ttfamily]{#4}}
   \settowidth{\PS@sampleoutwidth}{\usebox{\PS@sampleoutbox}}
   \settowidth{\PS@sampleinwidth}{\usebox{\PS@sampleinbox}}
   \setlength{\PS@sampletotwidth}{\PS@sampleinwidth}

@@ -3,10 +3,10 @@ verification language (https://github.com/DOMjudge/checktestdata)
 """
 
 import os
+import json
 from .executable import Executable
 from .errors import ProgramError
 from .tools import get_tool_path
-
 
 class Checktestdata(Executable):
     """Wrapper class for running Checktestdata scripts.
@@ -22,6 +22,21 @@ class Checktestdata(Executable):
         if Checktestdata._CTD_PATH is None:
             raise ProgramError(
                 'Could not locate the Checktestdata program to run %s' % path)
+
+        # if contraints file exists
+        constraintFile = os.path.dirname(path) + "/../problem_statement/constraints.json"
+        if os.path.exists(constraintFile):
+            constraints = json.loads(open(constraintFile).read())
+            
+            # prepend file with constraints
+            tmpFile = '/tmp/ctd.tmp'
+            with open(tmpFile, "w") as outf:
+                outf.write(self.constraintString(constraints))
+                with open(path, "r") as inf:
+                    content = inf.read()
+                outf.write(content)
+            path = tmpFile
+
         super(Checktestdata, self).__init__(Checktestdata._CTD_PATH,
                                             args=[path])
 
@@ -30,6 +45,14 @@ class Checktestdata(Executable):
         """String representation"""
         return '%s' % (self.args[0])
 
+    def constraintString(self, dictionary):
+        """Converts a dictionary with key-value pairs into a string
+            that can be prepended to the actual program and sets some constaints
+        """
+        r = ""
+        for k, v in dictionary.iteritems():
+            r += "SET(%s = %s)\n" % (str(k), str(v))
+        return r
 
     _compile_result = None
     def compile(self):

@@ -36,9 +36,9 @@ def convert(problem, options=None):
     if options.nopdf:
         params = params + ' -draftmode'
 
-    status = os.system('pdflatex %s %s %s' % (params, texfile, redirect))
+    status = os.system('lualatex %s %s %s' % (params, texfile, redirect))
     if os.WIFEXITED(status) and os.WEXITSTATUS(status) == 0:
-        status = os.system('pdflatex %s %s %s' % (params, texfile, redirect))
+        status = os.system('lualatex %s %s %s' % (params, texfile, redirect))
 
     os.chdir(origcwd)
 
